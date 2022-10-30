@@ -142,6 +142,41 @@ function buildOverpassApiUrl(map, overpassQuery) {
     });
     });
 
+//make a list of 20 different streets in karlsruhe
+var streets = [
+    "Amalienstraße",
+    "Kaiserstraße",
+    "Karlstraße",
+    "Königsstraße",
+    "Marktplatz",
+    "Marktstraße"
+];
+
+//create a function to geocode the streets
+function geocodeStreet(street) {
+    var geocoder = L.Control.Geocoder.nominatim();
+    geocoder.geocode(street + ", Karlsruhe, Germany", function (results) {
+        var latlng = results[0].center;
+        var marker = L.marker(latlng).addTo(map);
+        marker.bindPopup(street);
+    });
+}
+
+//geocode all streets
+streets.forEach(function (street) {
+    //add a timeout to avoid overloading the geocoding service
+    setTimeout(function () {
+        geocodeStreet(street);
+    }
+    , 1000);
+
+});
+
+
+
+
+
+
 
 
 //add a layer control
