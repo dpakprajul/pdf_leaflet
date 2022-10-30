@@ -61,7 +61,7 @@ var osm = new L.TileLayer(
 
 //create overpassLayer with the drinking water query with germany bounding box
 var library = new L.OverPassLayer({
-    query: 'node["amenity"="library"](49.011903881920404, 8.405687766634742, 49.061903881920404, 8.585687766634742);out body;>;out skel qt;',
+    query: 'node["amenity"="library"](49.011903881920404, 8.405687766634742, 49.561903881920404, 8.885687766634742);out body;>;out skel qt;',
     minzoom: 15,
     callback: function(data) {
         return L.geoJson(data, {
