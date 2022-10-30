@@ -1,1 +1,18 @@
 #map { height: 600px; }
+
+body {
+    padding: 0;
+    margin: 0;
+  }
+  html, body, #map {
+    height: 100%;
+    width: 100%;
+  }
+  #overpass-api-controls {
+    padding: 50px;
+    background-color: rgb(255, 255, 255);
+  }
+  #overpass-api-controls a {
+    padding: 40px;
+    display: inline;
+  }
