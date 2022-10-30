@@ -1,4 +1,4 @@
-var map = L.map('map').setView([51.505, -0.09], 13);
+var map = L.map('map').setView([49.011903881920404, 8.405687766634742], 15);
 
 osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -41,7 +41,7 @@ var osm = new L.TileLayer(
 
 //create OverpassLayer with the forest polygons with germany bounding box
 var forestLayer = new L.OverPassLayer({
-    query: 'node["natural"="water"](51.5,-0.1,51.6,-0.2);out body;>;out skel qt;',
+    query: 'node["amenity"="restaurant"](48.911903881920404, 8.405687766634742,49.01491617366377 ,8.41696147341304);out body;>;out skel qt;',
     callback: function(data) {
         return L.geoJson(data, {
             style: function(feature) {
