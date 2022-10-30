@@ -26,13 +26,18 @@
               <div id="overpass-api-controls" class="leaflet-bar leaflet-control">
                 <input id="query-textfield" value="leisure=playground" size="50">
                 <input id="query-button" type="button" value="Load">
+                
               </div>
             </div>
           </div>
+          <!-- placeholder for latlng -->
+         
     </div>
     
    
- 
+    <p>Hello
+      <input type="text" id="geocoding-results" readonly />
+    </p>
 
     
 </body>
@@ -45,6 +50,9 @@
      <script src="https://unpkg.com/leaflet-simple-map-screenshoter"></script>
      <script src="OverPassLayer.bundle.js"></script>
      <script src="osmtogeojson.js"></script>
+     <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=key">
+</script>
      
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="main.js"></script>

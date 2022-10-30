@@ -142,40 +142,63 @@ function buildOverpassApiUrl(map, overpassQuery) {
     });
     });
 
-//make a list of 20 different streets in karlsruhe
+//make a list of 40 different streets in karlsruhe
 var streets = [
     "Amalienstraße",
     "Kaiserstraße",
     "Karlstraße",
     "Königsstraße",
     "Marktplatz",
-    "Marktstraße"
+    "Marktstraße",
+    "Neuburger Straße",
+    "Neugasse",
+    "Neustadt",
+    "Neustadtstraße",
+    "Oberer Graben",
+    "Oberer Markt",
+    "Oberer Wilhelmstraße",
+    "Obermarkt",
+    "Oberstraße",
+    "Rathausplatz",
+    "Rathausstraße",
+    "Ritterstraße"
 ];
 
 //create a function to geocode the streets
+// function geocodeStreet(street) {
+//     var geocoder = L.Control.Geocoder.nominatim();
+//     geocoder.geocode(street + ", Karlsruhe, Germany", function (results) {
+//         var latlng = results[0].center;
+//         var marker = L.marker(latlng).addTo(map);
+//         marker.bindPopup(street);
+//     });
+// }
+
+//use google geocoding api to geocode the streets
 function geocodeStreet(street) {
-    var geocoder = L.Control.Geocoder.nominatim();
-    geocoder.geocode(street + ", Karlsruhe, Germany", function (results) {
-        var latlng = results[0].center;
-        var marker = L.marker(latlng).addTo(map);
-        marker.bindPopup(street);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'address': street + ", Karlsruhe, Germany" }, function (results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            var latlng = results[0].geometry.location;
+           //get the latlng and convert it to list of coordinates
+            var latlngList = [latlng.lat(), latlng.lng()];
+            //show it in the console
+            console.log(latlngList);
+            
+
+            var marker = L.marker([latlng.lat(), latlng.lng()]).addTo(map);
+            marker.bindPopup(street);
+        }
     });
 }
 
-//geocode all streets
+//loop through the streets and geocode them
 streets.forEach(function (street) {
-    //add a timeout to avoid overloading the geocoding service
     setTimeout(function () {
         geocodeStreet(street);
     }
     , 1000);
-
 });
-
-
-
-
-
 
 
 
