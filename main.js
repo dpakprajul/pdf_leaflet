@@ -4,7 +4,7 @@ osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
-
+Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMGE1NmY2Yi01NzBhLTRlM2QtOTg4Ny02Y2Q4YWIxMWE1N2IiLCJpZCI6MTEzNDY0LCJpYXQiOjE2Njc0MzMzMjN9.EV8CL5GC59rzI5CWH3tmPc3xUdxcRNnwzeCcoJfRz40';
 
 //add a stamen basemap
 var stamen = L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
@@ -91,88 +91,194 @@ function buildOverpassApiUrl(map, overpassQuery) {
     var nodeQuery = 'node[' + overpassQuery + '](' + bounds + ');';
     var wayQuery = 'way[' + overpassQuery + '](' + bounds + ');';
     var relationQuery = 'relation[' + overpassQuery + '](' + bounds + ');';
-    var query = '?data=[out:xml][timeout:25];(' + nodeQuery + wayQuery + relationQuery + ');out body;>;out skel qt;';
+    var query = '?data=[out:xml][timeout:50];(' + nodeQuery + wayQuery + relationQuery + ');out body;>;out skel qt;';
     var baseUrl = 'http://overpass-api.de/api/interpreter';
     var resultUrl = baseUrl + query;
     return resultUrl;
   }
+  
+  //define to3d function that converts a the building to a 3d object
+    // function to3d(geojson) {
+    //     var geojsonLayer = L.geoJson(geojson, {
+    //         onEachFeature: function(feature, layer) {
+    //             var height = feature.properties.height;
+    //             var color = feature.properties.color;
+    //             var shape = feature.geometry.type;
+    //             var coords = feature.geometry.coordinates;
+    //             var latlngs = [];
+    //             if (shape == 'Polygon') {
+    //                 for (var i = 0; i < coords.length; i++) {
+    //                     //convert coordinates to latlngs for polygon
+    //                     latlngs.push([coords[i][1], coords[i][0]]);
+
+    //                 }
+    //                 var polygon = new L.Polygon(latlngs, {
+    //                     color: color,
+    //                     opacity: 0.5,
+    //                     fillOpacity: 0.2
+    //                 });
+    //                //extrude the polygon using cesium
+    //                 var building = CesiumExtrudedPolygonGraphics.fromPolygon(polygon, {
+    //                     height: height,
+    //                     material: Cesium.Color.fromCssColorString(color)
+    //                 });
+    //                 //add the building to the cesium entity
+    //                 var entity = viewer.entities.add({
+    //                     polygon: building
+    //                 });
+    //             } else if (shape == 'MultiPolygon') {
+    //                 for (var i = 0; i < coords.length; i++) {
+    //                     var latlngs = [];
+    //                     for (var j = 0; j < coords[i].length; j++) {
+    //                         //convert coordinates to latlngs for polygon
+    //                         latlngs.push([coords[i][j][1], coords[i][j][0]]);
+    //                     }
+    //                     var polygon = new L.Polygon(latlngs, {
+    //                         color: color,
+    //                         opacity: 0.5,
+    //                         fillOpacity: 0.2
+    //                     });
+    //                     //extrude the polygon using cesium
+    //                     var building = CesiumExtrudedPolygonGraphics.fromPolygon(polygon, {
+    //                         height: height,
+    //                         material: Cesium.Color.fromCssColorString(color)
+    //                     });
+    //                     //add the building to the cesium entity
+    //                     var entity = viewer.entities.add({
+    //                         polygon: building
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
+
+    //add the cesium layer to the map
+    // var cesiumLayer = L.cesium({viewer: viewer});
+    // map.addLayer(cesiumLayer);
+
+    //add the polygon in the cesium viewer
+
+
+
+    
+
   $("#query-button").click(function () {
     var queryTextfieldValue = $("#query-textfield").val();
     var overpassApiUrl = buildOverpassApiUrl(map, queryTextfieldValue);
     
     $.get(overpassApiUrl, function (osmDataAsXml) {
       var resultAsGeojson = osmtogeojson(osmDataAsXml);
+        //to3d(resultAsGeojson);
       var resultLayer = L.geoJson(resultAsGeojson, 
-        //if the result is a point, create a circle marker
+        
+        //if the result is a polygon, create a polygon
         {
-        pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: 10,
-                fillColor: "#ff7800",
-                color: "#000",
-                weight: 1,
-                opacity: 0.5,
-                fillOpacity: 0.8
-            });
+            onEachFeature: function (feature, layer) {
+                if (feature.geometry.type === 'Polygon') {
+                    //get the height of the building
+                    var height = feature.properties.tags.height;
+                    //if the height is not defined, set it to 10
+                    if (height === undefined) {
+                        height = 10;
+                    }
+                    //create new LeafletLayer for the 3d building with layer and options
+                    var building = L.geoJson(feature, {
+                        style: function (feature) {
+                            return {
+                                color: '#ff7800',
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            };
+                        }
+                    });
+                    
+                    //add the 3d building to the map
+                    building.addTo(map);
+                    
 
-        },
-        filter: function (feature, layer) {
-          var isPolygon = (feature.geometry) && (feature.geometry.type !== undefined) && (feature.geometry.type === "Polygon");
-          if (isPolygon) {
-            feature.geometry.type = "Point";
-            var polygonCenter = L.latLngBounds(feature.geometry.coordinates[0]).getCenter();
-            feature.geometry.coordinates = [ polygonCenter.lat, polygonCenter.lng ];
-          }
-          return true;
-        },
-        onEachFeature: function (feature, layer) {
-          var popupContent = "";
-          var objectUrl = "http://overpass-api.de/api/interpreter?data=[out:json];" + feature.properties.type + "%28" + feature.properties.id + "%29;out;";
-          $.get(objectUrl, function (objectDataAsJson) {
-            popupContent = popupContent + "<dt>@id</dt><dd>" + feature.properties.type + "/" + feature.properties.id + "</dd>";
-            var keys = Object.keys(objectDataAsJson.elements[0].tags);
-            keys.forEach(function (key) {
-              popupContent = popupContent + "<dt>" + key + "</dt><dd>" + objectDataAsJson.elements[0].tags[key] + "</dd>";
-            });
-            popupContent = popupContent + "</dl>"
-            layer.bindPopup(popupContent);
-          });
+
+                }
+
+        
+            }
         }
-      }).addTo(map);
+        );
+       
+
+       
+
+
+    //     {
+    //     pointToLayer: function (feature, latlng) {
+    //         return L.circleMarker(latlng, {
+    //             radius: 10,
+    //             fillColor: "#ff7800",
+    //             color: "#000",
+    //             weight: 1,
+    //             opacity: 0.5,
+    //             fillOpacity: 0.8
+    //         });
+
+    //     },
+    //     filter: function (feature, layer) {
+    //       var isPolygon = (feature.geometry) && (feature.geometry.type !== undefined) && (feature.geometry.type === "Polygon");
+    //       if (isPolygon) {
+    //         feature.geometry.type = "Point";
+    //         var polygonCenter = L.latLngBounds(feature.geometry.coordinates[0]).getCenter();
+    //         feature.geometry.coordinates = [ polygonCenter.lat, polygonCenter.lng ];
+    //       }
+    //       return true;
+    //     },
+    //     onEachFeature: function (feature, layer) {
+    //       var popupContent = "";
+    //       var objectUrl = "http://overpass-api.de/api/interpreter?data=[out:json];" + feature.properties.type + "%28" + feature.properties.id + "%29;out;";
+    //       $.get(objectUrl, function (objectDataAsJson) {
+    //         popupContent = popupContent + "<dt>@id</dt><dd>" + feature.properties.type + "/" + feature.properties.id + "</dd>";
+    //         var keys = Object.keys(objectDataAsJson.elements[0].tags);
+    //         keys.forEach(function (key) {
+    //           popupContent = popupContent + "<dt>" + key + "</dt><dd>" + objectDataAsJson.elements[0].tags[key] + "</dd>";
+    //         });
+    //         popupContent = popupContent + "</dl>"
+    //         layer.bindPopup(popupContent);
+    //       });
+    //     }
+    //   }).addTo(map);
     });
     });
 
 //make a list of 40 different streets in karlsruhe
-var streets = [
-    "Amalienstraße",
-    "Kaiserstraße",
-    "Karlstraße",
-    "Königsstraße",
-    "Marktplatz",
-    "Marktstraße",
-    "Neuburger Straße",
-    "Neugasse",
-    "Neustadt",
-    "Neustadtstraße",
-    "Oberer Graben",
-    "Oberer Markt",
-    "Oberer Wilhelmstraße",
-    "Obermarkt",
-    "Oberstraße",
-    "Rathausplatz",
-    "Rathausstraße",
-    "Ritterstraße"
-];
+// var streets = [
+//     "Amalienstraße",
+//     "Kaiserstraße",
+//     "Karlstraße",
+//     "Königsstraße",
+//     "Marktplatz",
+//     "Marktstraße",
+//     "Neuburger Straße",
+//     "Neugasse",
+//     "Neustadt",
+//     "Neustadtstraße",
+//     "Oberer Graben",
+//     "Oberer Markt",
+//     "Oberer Wilhelmstraße",
+//     "Obermarkt",
+//     "Oberstraße",
+//     "Rathausplatz",
+//     "Rathausstraße",
+//     "Ritterstraße"
+// ];
 
-//create a function to geocode the streets
-function geocodeStreet(street) {
-    var geocoder = L.Control.Geocoder.nominatim();
-    geocoder.geocode(street + ", Karlsruhe, Germany", function (results) {
-        var latlng = results[0].center;
-        var marker = L.marker(latlng).addTo(map);
-        marker.bindPopup(street);
-    });
-}
+// //create a function to geocode the streets
+// function geocodeStreet(street) {
+//     var geocoder = L.Control.Geocoder.nominatim();
+//     geocoder.geocode(street + ", Karlsruhe, Germany", function (results) {
+//         var latlng = results[0].center;
+//         var marker = L.marker(latlng).addTo(map);
+//         marker.bindPopup(street);
+//     });
+// }
 
 //use google geocoding api to geocode the streets
 // function geocodeStreet(street) {
@@ -193,12 +299,12 @@ function geocodeStreet(street) {
 // }
 
 //loop through the streets and geocode them
-streets.forEach(function (street) {
-    setTimeout(function () {
-        geocodeStreet(street);
-    }
-    , 10000);
-});
+// streets.forEach(function (street) {
+//     setTimeout(function () {
+//         geocodeStreet(street);
+//     }
+//     , 2000);
+// });
 
 
 

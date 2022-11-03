@@ -1,5 +1,6 @@
 #make a list of streets in karlsruhe
 import time
+
 streets= [
     "Marktplatz",
     "Marktstraße",
