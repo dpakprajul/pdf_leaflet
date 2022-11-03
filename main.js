@@ -170,6 +170,9 @@ function buildOverpassApiUrl(map, overpassQuery) {
     $.get(overpassApiUrl, function (osmDataAsXml) {
       var resultAsGeojson = osmtogeojson(osmDataAsXml);
         //to3d(resultAsGeojson);
+        //create a json tile layer with the geojson data
+        
+    
       var resultLayer = L.geoJson(resultAsGeojson, 
         
         //if the result is a polygon, create a polygon
@@ -207,7 +210,6 @@ function buildOverpassApiUrl(map, overpassQuery) {
         );
        
 
-       
 
 
     //     {
@@ -305,6 +307,13 @@ function buildOverpassApiUrl(map, overpassQuery) {
 //     }
 //     , 2000);
 // });
+
+
+
+
+L.easyButton('fa-home fa-lg', function(){
+    osmb = new OSMBuildings(map).load('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json'); 
+  },"Show 2.5D Buildings",'topleft').addTo(map);
 
 
 
