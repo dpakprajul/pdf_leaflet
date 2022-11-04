@@ -159,6 +159,15 @@ function buildOverpassApiUrl(map, overpassQuery) {
 
     //add the polygon in the cesium viewer
 
+  //define function getLatLngs that returns the coordinates of the polygon
+  function getLatLngs(feature) {
+    var coords = feature.geometry.coordinates;
+    var latlngs = [];
+    for (var i = 0; i < coords.length; i++) {
+        latlngs.push([coords[i][1], coords[i][0]]);
+    }
+    return latlngs;
+}
 
 
     
@@ -179,12 +188,6 @@ function buildOverpassApiUrl(map, overpassQuery) {
         {
             onEachFeature: function (feature, layer) {
                 if (feature.geometry.type === 'Polygon') {
-                    //get the height of the building
-                    var height = feature.properties.tags.height;
-                    //if the height is not defined, set it to 10
-                    if (height === undefined) {
-                        height = 10;
-                    }
                     //create new LeafletLayer for the 3d building with layer and options
                     var building = L.geoJson(feature, {
                         style: function (feature) {
@@ -194,19 +197,80 @@ function buildOverpassApiUrl(map, overpassQuery) {
                                 opacity: 1,
                                 fillOpacity: 0.8
                             };
+                            //use popup to show the height of the building
+                        },
+                        onEachFeature: function (feature, layer) {
+                          //when the user clicks on the building, show some information and save it as a text file
+                            layer.on('click', function (e) {
+                                var city = feature.properties.tags['addr:city'];
+                                var name = feature.properties.tags.name;
+                              //handle key value pairs where key has colon in the character
+                                var address = feature.properties.tags['addr:street'];
+                                //use address globally
+
+                                //create a bindPopup with the information and store it when button is clicked
+
+                                building.bindPopup('Height: ' + address + 'm' + '<br>' + 'Name: ' + name);
+                                building.on('click', groupClick);
+                            })
                         }
-                    });
-                    
-                    //add the 3d building to the map
-                    building.addTo(map);
-                    
+                   
+                    }).addTo(map);
+                    //add bindpopup to the building
+                    //access the address of the building which is inside a onEachFeature function
+   
+
+ //create a groupClick function that saves the information as a text file
+                    function groupClick(event) {
+                        var popup = this.getPopup();
+                        var content = popup.getContent();
+                 //add save button to the popup
+                        popup.setContent(content + '<br><button id="save-button">Save</button>');
+                        //add click event to the save button
+
+                        // $('#save-button').click(function () {
+                        //     var blob = new Blob([content], {
+                        //         type: "text/plain;charset=utf-8"
+                        //     });
+                        //     saveAs(blob, "building.txt");
+                        // }
+                        // )
+                        //alert when the user clicks on the save button
+
+                        //use timeout for the user to select the save button
+                        setTimeout(function () {
+                            $('#save-button').click(function () {
+                                var blob = new Blob([content], {
+                                            type: "text/plain;charset=utf-8"
+                                        });
+                                        saveAs(blob, "building.txt");
+                            })
+                        }
+                            , 1000);
+
+                            // //send the content to the server
+                            // $.ajax({
+                            //     type: "POST",
+                            //     url: "http://127.0.0.1:5500/index.html",
+                            //     data: content,
+                            //     success: function (data) {
+                            //         console.log(data);
+                            //     }
+                            // });
+                            
+                            
 
 
+
+
+
+
+                    }
                 }
-
-        
             }
         }
+        
+
         );
        
 
@@ -311,7 +375,7 @@ function buildOverpassApiUrl(map, overpassQuery) {
 
 
 
-L.easyButton('fa-home fa-lg', function(){
+build= L.easyButton('fa-home fa-lg', function(){
     osmb = new OSMBuildings(map).load('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json'); 
   },"Show 2.5D Buildings",'topleft').addTo(map);
 
@@ -325,6 +389,7 @@ L.control.layers({
     'Library': library
 
 }).addTo(map);
+
 
 
 L.control.browserPrint().addTo(map);
